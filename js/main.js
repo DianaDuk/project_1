@@ -86,8 +86,86 @@ const thumbnailModule = (() => {
   };
 })();
 
+// Додаємо обробник події на клік для кожної мініатюри
+const addThumbnailClickListener = () => {
+  const thumbnails = document.querySelectorAll('.picture');
+  thumbnails.forEach((thumbnail, index) => {
+    thumbnail.addEventListener('click', (evt) => {
+      evt.preventDefault(); // Запобігаємо переходу за посиланням
+      fullViewModule.openFullView(photos[index]); // Відкриваємо повнорозмірне зображення
+    });
+  });
+};
+
 // Генерація фото та їх відображення
 const photos = generatePhotos();
 thumbnailModule.renderThumbnails(photos);
+addThumbnailClickListener(); // Додаємо обробник події для мініатюр
 
+const fullViewModule = (() => {
+  const bigPictureElement = document.querySelector('.big-picture');
+  const bigPictureImg = bigPictureElement.querySelector('.big-picture__img img');
+  const likesCountElement = bigPictureElement.querySelector('.likes-count');
+  const commentsCountElement = bigPictureElement.querySelector('.comments-count');
+  const commentsContainer = bigPictureElement.querySelector('.social__comments');
+  const captionElement = bigPictureElement.querySelector('.social__caption');
+  const bodyElement = document.body;
+  const closeButton = bigPictureElement.querySelector('.big-picture__cancel');
 
+  // Функція для створення коментаря
+  const createCommentElement = (comment) => {
+    const commentElement = document.createElement('li');
+    commentElement.classList.add('social__comment');
+    commentElement.innerHTML = `
+      <img class="social__picture" src="${comment.avatar}" alt="${comment.name}" width="35" height="35">
+      <p class="social__text">${comment.message}</p>
+    `;
+    return commentElement;
+  };
+
+  // Функція для відкриття повнорозмірного зображення
+  const openFullView = (photo) => {
+    bigPictureImg.src = photo.url;
+    likesCountElement.textContent = photo.likes;
+    commentsCountElement.textContent = photo.comments.length;
+    captionElement.textContent = photo.description;
+
+    // Очищуємо старі коментарі
+    commentsContainer.innerHTML = '';
+
+    // Додаємо нові коментарі
+    const commentsFragment = document.createDocumentFragment();
+    photo.comments.forEach(comment => {
+      commentsFragment.appendChild(createCommentElement(comment));
+    });
+    commentsContainer.appendChild(commentsFragment);
+
+    // Відображаємо вікно
+    bigPictureElement.classList.remove('hidden');
+    bodyElement.classList.add('modal-open');
+
+    // Закриття по Esc
+    document.addEventListener('keydown', onEscPress);
+  };
+
+  // Функція для закриття повнорозмірного зображення
+  const closeFullView = () => {
+    bigPictureElement.classList.add('hidden');
+    bodyElement.classList.remove('modal-open');
+    document.removeEventListener('keydown', onEscPress);
+  };
+
+  // Закриття по Esc
+  const onEscPress = (evt) => {
+    if (evt.key === 'Escape' || evt.key === 'Esc') {
+      closeFullView();
+    }
+  };
+
+  // Закриття по кліку на кнопку
+  closeButton.addEventListener('click', closeFullView);
+
+  return {
+    openFullView,
+  };
+})();
