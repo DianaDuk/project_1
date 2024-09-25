@@ -48,3 +48,54 @@
 .picture__likes span, .picture__comments span {
     color: white; /* Встановити білий колір для цифр */
 }
+
+.hidden {
+    display: none;
+}
+
+.modal-open {
+    overflow: hidden;
+}
+
+.big-picture {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 90%;
+}
+
+.big-picture__img img {
+    max-width: 100%;
+    height: auto;
+}
+
+.social__comments {
+    list-style: none;
+    padding: 0;
+}
+
+.social__comment {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.social__picture {
+    margin-right: 10px;
+    border-radius: 50%;
+}
+
+.big-picture__cancel {
+    cursor: pointer;
+    background: red;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    margin-top: 20
+}
