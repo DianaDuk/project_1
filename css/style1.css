@@ -1,0 +1,101 @@
+/* Контейнер для всіх мініатюр */
+.pictures {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;                       
+}
+
+.picture {
+    position: relative;
+    display: inline-block;
+    width: 150px;
+    height: 150px;
+    overflow: hidden;
+}
+
+.picture__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Інформація про лайки і коментарі */
+.picture__info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    padding: 5px;
+}
+
+/* Зменшити відстань між цифрами лайків та коментарів */
+.picture__likes, .picture__comments {
+    display: flex;
+    align-items: center;
+    margin-right: 10px; /* Зменште відстань тут, якщо потрібно */
+}
+
+.picture__likes img, .picture__comments img {
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+.picture__likes span, .picture__comments span {
+    color: white; /* Встановити білий колір для цифр */
+}
+
+.hidden {
+    display: none;
+}
+
+.modal-open {
+    overflow: hidden;
+}
+
+.big-picture {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 90%;
+}
+
+.big-picture__img img {
+    max-width: 100%;
+    height: auto;
+}
+
+.social__comments {
+    list-style: none;
+    padding: 0;
+}
+
+.social__comment {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.social__picture {
+    margin-right: 10px;
+    border-radius: 50%;
+}
+
+.big-picture__cancel {
+    cursor: pointer;
+    background: red;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    margin-top: 20
+}
