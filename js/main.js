@@ -39,14 +39,14 @@ const generateComments = () => {
 // Generate photo objects
 const generatePhotos = () => {
   return Array.from({ length: TOTAL_PHOTOS }, (_, index) => {
-      const id = index + 1;
-      return {
-          id,
-          url: `images/${id}.jpg`,
-          description: `Це опис для фото номер ${id}`,
-          likes: getRandomNumber(MIN_LIKES, MAX_LIKES),
-          comments: generateComments(),
-      };
+    const id = index + 1;
+    return {
+      id,
+      url: `images/${id}.jpg`,
+      description: `Це опис для фото номер ${id}`,
+      likes: getRandomNumber(MIN_LIKES, MAX_LIKES),
+      comments: generateComments(),
+    };
   });
 };
 
@@ -87,7 +87,7 @@ const thumbnailModule = (() => {
 })();
 
 // Додаємо обробник події на клік для кожної мініатюри
-const addThumbnailClickListener = () => {
+const addThumbnailClickListener = (photos) => {
   const thumbnails = document.querySelectorAll('.picture');
   thumbnails.forEach((thumbnail, index) => {
     thumbnail.addEventListener('click', (evt) => {
@@ -100,7 +100,7 @@ const addThumbnailClickListener = () => {
 // Генерація фото та їх відображення
 const photos = generatePhotos();
 thumbnailModule.renderThumbnails(photos);
-addThumbnailClickListener(); // Додаємо обробник події для мініатюр
+addThumbnailClickListener(photos); // Додаємо обробник події для мініатюр
 
 const fullViewModule = (() => {
   const bigPictureElement = document.querySelector('.big-picture');
@@ -122,6 +122,64 @@ const fullViewModule = (() => {
     `;
     return commentElement;
   };
+
+// Функція для валідації хеш-тегів
+const validateHashtags = (hashtags) => {
+  const hashtagsArray = hashtags.trim().split(/\s+/);
+  
+  if (hashtagsArray.length > 5) {
+    return 'Максимальна кількість хеш-тегів - 5.';
+  }
+
+  for (let hashtag of hashtagsArray) {
+    if (!/^#[A-Za-zА-Яа-я0-9]{1,19}$/.test(hashtag)) {
+      return 'Хеш-теги повинні починатися з # і містити лише букви, цифри, не більше 20 символів.';
+    }
+    if (hashtagsArray.indexOf(hashtag) !== hashtagsArray.lastIndexOf(hashtag)) {
+      return 'Хеш-теги повинні бути унікальними.';
+    }
+  }
+  
+  return null; // Валідація пройдена
+};
+
+// Функція для валідації коментаря
+const validateComment = (comment) => {
+  if (comment.trim().length > 140) {
+    return 'Коментар не може перевищувати 140 символів.';
+  }
+  return null; // Валідація пройдена
+};
+
+// Функція для валідації всієї форми
+const validateForm = () => {
+  const hashtagsInput = document.querySelector('.text__hashtags').value;
+  const commentInput = document.querySelector('.text__description').value;
+
+  const hashtagError = validateHashtags(hashtagsInput);
+  const commentError = validateComment(commentInput);
+
+  if (hashtagError) {
+    alert(hashtagError); // Показуємо помилку для хеш-тегів
+    return false;
+  }
+  
+  if (commentError) {
+    alert(commentError); // Показуємо помилку для коментаря
+    return false;
+  }
+
+  return true; // Всі перевірки пройдені
+};
+
+// Додаємо обробник події на форму
+const uploadForm = document.querySelector('#upload-select-image');
+uploadForm.addEventListener('submit', (evt) => {
+  if (!validateForm()) {
+    evt.preventDefault(); // Запобігаємо відправці форми, якщо є помилки
+  }
+});
+
 
   // Функція для відкриття повнорозмірного зображення
   const openFullView = (photo) => {

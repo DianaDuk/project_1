@@ -1,15 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/css/style.css">
-    <title>Image Viewer</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="nouislider/nouislider.css">
+  <link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <title>Ram</title>
 </head>
-<body>
-    <script type="module" src="js/main.js"></script>
 
-    <template id="picture">
+<body class="body">
+  <main class="mainm">
+
+    <!-- Фільтрування зображень від інших користувачів -->
+    <section class="img-filters img-filters--inactive container">
+      <h2 class="img-filters__title visually-hidden">Фільтр фотографій</h2>
+      <form class="img-filters__form" action="index.html" method="get" autocomplete="off">
+        <button type="button" class="img-filters__button img-filters__button--active" id="filter-default">За замовчуванням</button>
+        <button type="button" class="img-filters__button" id="filter-random">Випадкові</button>
+        <button type="button" class="img-filters__button" id="filter-discussed">Популярні</button>
+      </form>
+    </section>
+
+    <!-- Контейнер для зображень від інших користувачів -->
+    <section class="pictures container">
+      <h2 class="pictures__title visually-hidden">Фотографії інших користувачів</h2>
+
+      <!-- Шаблон для зображень -->
+      <template id="picture">
         <a href="#" class="picture">
           <img class="picture__img" src="" alt="Фото користувача">
           <p class="picture__info">
@@ -18,20 +37,100 @@
           </p>
         </a>
       </template>
-      
-      <div class="pictures"></div>   
-      
-      <div class="big-picture hidden">
+
+      <!-- Список зображень -->
+      <div class="pictures-list"></div>
+    </section>
+
+    <!-- Повноекранний показ зображення -->
+    <section class="big-picture overlay hidden">
+      <h2 class="big-picture__title visually-hidden">Перегляд фотографії</h2>
+      <div class="big-picture__preview">
         <div class="big-picture__img">
-          <img src="" alt="Фото користувача">
+          <img src="" alt="Фото користувача" width="600" height="600">
         </div>
+
         <div class="big-picture__info">
-          <ul class="likes-count"></ul>
-          <ul class="comments-count"></ul>
-          <ul class="social__comments"></ul>
           <p class="social__caption"></p>
+          <p class="social__likes">Нравится <span class="likes-count">0</span></p>
+          <div class="social__comment-count">0 из <span class="comments-count">0</span> комментарів</div>
+
+          <!-- Коментарі до зображення -->
+          <ul class="social__comments"></ul>
+
+          <!-- Кнопка для закриття перегляду -->
+          <button type="reset" class="big-picture__cancel cancel">Закрити</button>
         </div>
-        <button class="big-picture__cancel">Закрити</button>
       </div>
+    </section>
+
+    <!-- Поле для завантаження нового зображення на сайт -->
+    <section class="img-upload">
+      <div class="img-upload__wrapper">
+        <h2 class="img-upload__title visually-hidden">Завантаження фотографій</h2>
+        <form class="img-upload__form" id="upload-select-image" method="post" enctype="multipart/form-data" action="https://23.javascript.pages.academy/kekstagram" autocomplete="off">
+
+          <!-- Початковий стан поля для завантаження зображення -->
+          <fieldset class="img-upload__start">
+            <input type="file" id="upload-file" accept="image/*" class="img-upload__input visually-hidden" name="filename" required>
+            <label for="upload-file" class="img-upload__label img-upload__control">Завантажити</label>
+          </fieldset>
+
+          <!-- Форма редагування зображення -->
+          <div class="img-upload__overlay hidden">
+            <div class="img-upload__wrapper">
+              <div class="img-upload__preview-container">
+
+                <!-- Зміна розміру зображення -->
+                <fieldset class="img-upload__scale scale">
+                  <button type="button" class="scale__control scale__control--smaller">Зменшити</button>
+                  <input type="text" class="scale__control scale__control--value" value="100%" readonly>
+                  <button type="button" class="scale__control scale__control--bigger">Збільшити</button>
+                </fieldset>
+
+                <!-- Попередній перегляд зображення -->
+                <div class="img-upload__preview">
+                  <img src="img/upload-default-image.jpg" alt="Попередній перегляд фотографії">
+                </div>
+
+                <!-- Зміна глибини ефекту, що накладається на зображення -->
+                <fieldset class="img-upload__effect-level effect-level">
+                  <input class="effect-level__value" type="number" step="any" name="effect-level" value="">
+                  <div class="effect-level__slider"></div>
+                </fieldset>
+
+                <!-- Накладення ефекту на зображення -->
+                <fieldset class="img-upload__effects effects">
+                  <ul class="effects__list">
+                    <li class="effects__item">
+                      <input type="radio" class="effects__radio visually-hidden" name="effect" id="effect-none" value="none" checked>
+                      <label for="effect-none">Оригінал</label>
+                    </li>
+                    <!-- Додаткові ефекти -->
+                  </ul>
+                </fieldset>
+
+                <!-- Додавання хеш-тегів та коментаря до зображення -->
+                <fieldset class="img-upload__text text">
+                  <input class="text__hashtags" name="hashtags" placeholder="#ХешТег" required>
+                  <textarea class="text__description" name="description" placeholder="Ваш комментарий..." maxlength="140" required></textarea>
+                </fieldset>
+
+                <!-- Кнопка для відправки даних -->
+                <button type="submit" class="img-upload__submit">Опублікувати</button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="page-footer container">
+    <div class="page-footer__wrapper"></div>
+  </footer>
+
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>
