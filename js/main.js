@@ -23,17 +23,29 @@ const AVATAR_COUNT = 6;
 const getRandomNumber = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
 // Generate a single comment
-const generateComment = (id) => ({
-  id,
-  avatar: `img/avatar-${getRandomNumber(1, AVATAR_COUNT)}.svg`,
-  message: commentMessages[getRandomNumber(0, commentMessages.length - 1)],
-  name: commentAuthors[getRandomNumber(0, commentAuthors.length - 1)],
-});
+const generateComment = (id) => {
+  const avatarIndex = getRandomNumber(1, AVATAR_COUNT);
+  const messageIndex = getRandomNumber(0, commentMessages.length - 1);
+  const authorIndex = getRandomNumber(0, commentAuthors.length - 1);
+  
+  return {
+    id,
+    avatar: `img/avatar-${avatarIndex}.svg`,
+    message: commentMessages[messageIndex],
+    name: commentAuthors[authorIndex],
+  };
+};
 
-// Generate a list of comments
+// Generate a list of unique comments
 const generateComments = () => {
   const numberOfComments = getRandomNumber(MIN_COMMENTS, MAX_COMMENTS);
-  return Array.from({ length: numberOfComments }, (_, index) => generateComment(index + 1));
+  const comments = new Set();
+
+  while (comments.size < numberOfComments) {
+    comments.add(generateComment(comments.size + 1));
+  }
+
+  return Array.from(comments);
 };
 
 // Generate photo objects
@@ -74,9 +86,7 @@ const thumbnailModule = (() => {
   // Функція для створення всіх мініатюр
   const renderThumbnails = (photos) => {
     const fragment = document.createDocumentFragment();
-    photos.map(createThumbnail).forEach((thumbnail) => {
-      fragment.appendChild(thumbnail);
-    });
+    photos.forEach(photo => fragment.appendChild(createThumbnail(photo)));
     picturesContainer.appendChild(fragment);
   };
 
@@ -102,6 +112,99 @@ const photos = generatePhotos();
 thumbnailModule.renderThumbnails(photos);
 addThumbnailClickListener(photos); // Додаємо обробник події для мініатюр
 
+// Масштабування зображення
+const scaleControlSmaller = document.querySelector('.scale__control--smaller');
+const scaleControlBigger = document.querySelector('.scale__control--bigger');
+const scaleControlValue = document.querySelector('.scale__control--value');
+const imgPreview = document.querySelector('.img-upload__preview img');
+
+let scaleValue = 100; // Значення за замовчуванням
+
+function updateScale() {
+  scaleControlValue.value = `${scaleValue}%`;
+  imgPreview.style.transform = `scale(${scaleValue / 100})`;
+}
+
+scaleControlSmaller.addEventListener('click', () => {
+  if (scaleValue > 25) {
+    scaleValue -= 25;
+    updateScale();
+  }
+});
+
+scaleControlBigger.addEventListener('click', () => {
+  if (scaleValue < 100) {
+    scaleValue += 25;
+    updateScale();
+  }
+});
+
+// Початкове значення
+updateScale();
+
+// --- Накладення ефектів через noUiSlider ---
+const effectLevelSlider = document.querySelector('.effect-level__slider');
+const effectLevelValue = document.querySelector('.effect-level__value');
+const effectsRadio = document.querySelectorAll('.effects__radio');
+
+// Налаштування слайдера noUiSlider
+noUiSlider.create(effectLevelSlider, {
+  range: {
+    min: 0,
+    max: 100,
+  },
+  start: 100,
+  step: 1,
+  connect: 'lower',
+});
+
+// Оновлення ефекту на основі вибраного фільтра
+let currentEffect = 'none';
+
+const effectSettings = {
+  chrome: { filter: 'grayscale', unit: '', min: 0, max: 1, step: 0.1 },
+  sepia: { filter: 'sepia', unit: '', min: 0, max: 1, step: 0.1 },
+  marvin: { filter: 'invert', unit: '%', min: 0, max: 100, step: 1 },
+  phobos: { filter: 'blur', unit: 'px', min: 0, max: 3, step: 0.1 },
+  heat: { filter: 'brightness', unit: '', min: 1, max: 3, step: 0.1 },
+  none: { filter: '', unit: '', min: 0, max: 100, step: 1 },
+};
+
+function applyEffect(intensity) {
+  const { filter, unit } = effectSettings[currentEffect];
+  imgPreview.style.filter = filter ? `${filter}(${intensity}${unit})` : '';
+}
+
+effectLevelSlider.noUiSlider.on('update', (values) => {
+  effectLevelValue.value = values[0];
+  if (currentEffect !== 'none') {
+    applyEffect(values[0] / 100 * (effectSettings[currentEffect].max - effectSettings[currentEffect].min) + effectSettings[currentEffect].min);
+  }
+});
+
+effectsRadio.forEach((radio) => {
+  radio.addEventListener('change', (event) => {
+    currentEffect = event.target.value;
+    const settings = effectSettings[currentEffect];
+
+    if (currentEffect === 'none') {
+      effectLevelSlider.setAttribute('disabled', true);
+      imgPreview.style.filter = '';
+    } else {
+      effectLevelSlider.removeAttribute('disabled');
+      effectLevelSlider.noUiSlider.updateOptions({
+        range: {
+          min: settings.min,
+          max: settings.max,
+        },
+        start: settings.max,
+        step: settings.step,
+      });
+      applyEffect(settings.max);
+    }
+  });
+});
+
 const fullViewModule = (() => {
   const bigPictureElement = document.querySelector('.big-picture');
   const bigPictureImg = bigPictureElement.querySelector('.big-picture__img img');
@@ -116,73 +219,27 @@ const fullViewModule = (() => {
   const createCommentElement = (comment) => {
     const commentElement = document.createElement('li');
     commentElement.classList.add('social__comment');
-    commentElement.innerHTML = `
-      <img class="social__picture" src="${comment.avatar}" alt="${comment.name}" width="35" height="35">
-      <p class="social__text">${comment.message}</p>
-    `;
+
+    const img = document.createElement('img');
+    img.classList.add('social__picture');
+    img.src = comment.avatar;
+    img.alt = comment.name;
+    img.width = 35;
+    img.height = 35;
+
+    const text = document.createElement('p');
+    text.classList.add('social__text');
+    text.textContent = comment.message;
+
+    commentElement.appendChild(img);
+    commentElement.appendChild(text);
     return commentElement;
   };
 
-// Функція для валідації хеш-тегів
-const validateHashtags = (hashtags) => {
-  const hashtagsArray = hashtags.trim().split(/\s+/);
-  
-  if (hashtagsArray.length > 5) {
-    return 'Максимальна кількість хеш-тегів - 5.';
-  }
-
-  for (let hashtag of hashtagsArray) {
-    if (!/^#[A-Za-zА-Яа-я0-9]{1,19}$/.test(hashtag)) {
-      return 'Хеш-теги повинні починатися з # і містити лише букви, цифри, не більше 20 символів.';
-    }
-    if (hashtagsArray.indexOf(hashtag) !== hashtagsArray.lastIndexOf(hashtag)) {
-      return 'Хеш-теги повинні бути унікальними.';
-    }
-  }
-  
-  return null; // Валідація пройдена
-};
-
-// Функція для валідації коментаря
-const validateComment = (comment) => {
-  if (comment.trim().length > 140) {
-    return 'Коментар не може перевищувати 140 символів.';
-  }
-  return null; // Валідація пройдена
-};
-
-// Функція для валідації всієї форми
-const validateForm = () => {
-  const hashtagsInput = document.querySelector('.text__hashtags').value;
-  const commentInput = document.querySelector('.text__description').value;
-
-  const hashtagError = validateHashtags(hashtagsInput);
-  const commentError = validateComment(commentInput);
-
-  if (hashtagError) {
-    alert(hashtagError); // Показуємо помилку для хеш-тегів
-    return false;
-  }
-  
-  if (commentError) {
-    alert(commentError); // Показуємо помилку для коментаря
-    return false;
-  }
-
-  return true; // Всі перевірки пройдені
-};
-
-// Додаємо обробник події на форму
-const uploadForm = document.querySelector('#upload-select-image');
-uploadForm.addEventListener('submit', (evt) => {
-  if (!validateForm()) {
-    evt.preventDefault(); // Запобігаємо відправці форми, якщо є помилки
-  }
-});
-
-
-  // Функція для відкриття повнорозмірного зображення
+  // Функція для відображення повнорозмірного зображення
   const openFullView = (photo) => {
+    bigPictureElement.classList.remove('hidden');
+    bodyElement.classList.add('modal-open');
     bigPictureImg.src = photo.url;
     likesCountElement.textContent = photo.likes;
     commentsCountElement.textContent = photo.comments.length;
@@ -190,17 +247,11 @@ uploadForm.addEventListener('submit', (evt) => {
 
     // Очищуємо старі коментарі
     commentsContainer.innerHTML = '';
-
-    // Додаємо нові коментарі
-    const commentsFragment = document.createDocumentFragment();
+    const fragment = document.createDocumentFragment();
     photo.comments.forEach(comment => {
-      commentsFragment.appendChild(createCommentElement(comment));
+      fragment.appendChild(createCommentElement(comment));
     });
-    commentsContainer.appendChild(commentsFragment);
-
-    // Відображаємо вікно
-    bigPictureElement.classList.remove('hidden');
-    bodyElement.classList.add('modal-open');
+    commentsContainer.appendChild(fragment);
 
     // Закриття по Esc
     document.addEventListener('keydown', onEscPress);
@@ -210,7 +261,7 @@ uploadForm.addEventListener('submit', (evt) => {
   const closeFullView = () => {
     bigPictureElement.classList.add('hidden');
     bodyElement.classList.remove('modal-open');
-    document.removeEventListener('keydown', onEscPress);
+    document.removeEventListener('keydown', onEscPress); // При закритті видаляємо обробник
   };
 
   // Закриття по Esc
@@ -220,8 +271,10 @@ uploadForm.addEventListener('submit', (evt) => {
     }
   };
 
-  // Закриття по кліку на кнопку
-  closeButton.addEventListener('click', closeFullView);
+  // Закриття при натисканні на кнопку закриття
+  closeButton.addEventListener('click', () => {
+    closeFullView();
+  });
 
   return {
     openFullView,
