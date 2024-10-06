@@ -3,15 +3,12 @@ const commentMessages = [
   'Все відмінно!',
   'Загалом все непогано. Але не всі.',
   'Коли ви робите фотографію, добре б прибирати палець із кадру. Зрештою, це просто непрофесійно.',
-  'Моя бабуся випадково чхнула з фотоапаратом у руках і у неї вийшла фотографія краща.',
+  'Моя бабуся випадково чхнула з фотоапаратом у руках і у неї вийшла фотографія краще.',
   'Я послизнувся на банановій шкірці і впустив фотоапарат на кота і у мене вийшла фотографія краще.',
   'Обличчя людей на фотці перекошені, ніби їх побивають. Як можна було зловити такий невдалий момент?'
 ];
 
-// Array of random names
 const commentAuthors = ['Артем', 'Олена', 'Іван', 'Марія', 'Сергій', 'Катерина'];
-
-// Constants for ranges
 const MIN_COMMENTS = 1;
 const MAX_COMMENTS = 5;
 const MIN_LIKES = 15;
@@ -19,10 +16,8 @@ const MAX_LIKES = 200;
 const TOTAL_PHOTOS = 25;
 const AVATAR_COUNT = 6;
 
-// Generate a random number between two values (inclusive)
 const getRandomNumber = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-// Generate a single comment
 const generateComment = (id) => {
   const avatarIndex = getRandomNumber(1, AVATAR_COUNT);
   const messageIndex = getRandomNumber(0, commentMessages.length - 1);
@@ -36,7 +31,6 @@ const generateComment = (id) => {
   };
 };
 
-// Generate a list of unique comments
 const generateComments = () => {
   const numberOfComments = getRandomNumber(MIN_COMMENTS, MAX_COMMENTS);
   const comments = new Set();
@@ -48,7 +42,6 @@ const generateComments = () => {
   return Array.from(comments);
 };
 
-// Generate photo objects
 const generatePhotos = () => {
   return Array.from({ length: TOTAL_PHOTOS }, (_, index) => {
     const id = index + 1;
@@ -67,23 +60,16 @@ const thumbnailModule = (() => {
   const pictureTemplate = document.querySelector('#picture').content.querySelector('.picture');
   const picturesContainer = document.querySelector('.pictures');
 
-  // Функція для створення однієї мініатюри
   const createThumbnail = (photo) => {
     const pictureElement = pictureTemplate.cloneNode(true);
     pictureElement.querySelector('.picture__img').src = photo.url;
-
-    // Оновлюємо блок лайків: додаємо іконку лайка та кількість
     pictureElement.querySelector('.picture__likes').innerHTML = 
       `<img src="/icons/heart.png" alt="" width="16" height="16"> ${photo.likes}`;
-
-    // Оновлюємо блок коментарів: додаємо іконку коментаря та кількість
     pictureElement.querySelector('.picture__comments').innerHTML = `
       <img src="/icons/comment.png" alt="" width="16" height="16"> ${photo.comments.length}`;
-
     return pictureElement;
   };
 
-  // Функція для створення всіх мініатюр
   const renderThumbnails = (photos) => {
     const fragment = document.createDocumentFragment();
     photos.forEach(photo => fragment.appendChild(createThumbnail(photo)));
@@ -96,29 +82,45 @@ const thumbnailModule = (() => {
   };
 })();
 
-// Додаємо обробник події на клік для кожної мініатюри
 const addThumbnailClickListener = (photos) => {
   const thumbnails = document.querySelectorAll('.picture');
   thumbnails.forEach((thumbnail, index) => {
     thumbnail.addEventListener('click', (evt) => {
-      evt.preventDefault(); // Запобігаємо переходу за посиланням
-      fullViewModule.openFullView(photos[index]); // Відкриваємо повнорозмірне зображення
+      evt.preventDefault();
+      fullViewModule.openFullView(photos[index]);
     });
   });
 };
 
-// Генерація фото та їх відображення
 const photos = generatePhotos();
 thumbnailModule.renderThumbnails(photos);
-addThumbnailClickListener(photos); // Додаємо обробник події для мініатюр
+addThumbnailClickListener(photos);
 
-// Масштабування зображення
+// Завантаження зображення
+const uploadFileInput = document.querySelector('#upload-file');
+const imgUploadOverlay = document.querySelector('.img-upload__overlay');
+
+uploadFileInput.addEventListener('change', () => {
+  const file = uploadFileInput.files[0];
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    imgPreview.src = reader.result;
+    imgUploadOverlay.classList.remove('hidden');
+    document.body.classList.add('modal-open');
+  };
+
+  if (file) {
+    reader.readAsDataURL(file);
+  }
+});
+
 const scaleControlSmaller = document.querySelector('.scale__control--smaller');
 const scaleControlBigger = document.querySelector('.scale__control--bigger');
 const scaleControlValue = document.querySelector('.scale__control--value');
 const imgPreview = document.querySelector('.img-upload__preview img');
 
-let scaleValue = 100; // Значення за замовчуванням
+let scaleValue = 100;
 
 function updateScale() {
   scaleControlValue.value = `${scaleValue}%`;
@@ -139,15 +141,12 @@ scaleControlBigger.addEventListener('click', () => {
   }
 });
 
-// Початкове значення
 updateScale();
 
-// --- Накладення ефектів через noUiSlider ---
 const effectLevelSlider = document.querySelector('.effect-level__slider');
 const effectLevelValue = document.querySelector('.effect-level__value');
 const effectsRadio = document.querySelectorAll('.effects__radio');
 
-// Налаштування слайдера noUiSlider
 noUiSlider.create(effectLevelSlider, {
   range: {
     min: 0,
@@ -158,7 +157,6 @@ noUiSlider.create(effectLevelSlider, {
   connect: 'lower',
 });
 
-// Оновлення ефекту на основі вибраного фільтра
 let currentEffect = 'none';
 
 const effectSettings = {
@@ -186,7 +184,6 @@ effectsRadio.forEach((radio) => {
   radio.addEventListener('change', (event) => {
     currentEffect = event.target.value;
     const settings = effectSettings[currentEffect];
-
     if (currentEffect === 'none') {
       effectLevelSlider.setAttribute('disabled', true);
       imgPreview.style.filter = '';
@@ -215,28 +212,28 @@ const fullViewModule = (() => {
   const bodyElement = document.body;
   const closeButton = bigPictureElement.querySelector('.big-picture__cancel');
 
-  // Функція для створення коментаря
   const createCommentElement = (comment) => {
     const commentElement = document.createElement('li');
     commentElement.classList.add('social__comment');
-
     const img = document.createElement('img');
     img.classList.add('social__picture');
     img.src = comment.avatar;
     img.alt = comment.name;
     img.width = 35;
     img.height = 35;
-
     const text = document.createElement('p');
     text.classList.add('social__text');
     text.textContent = comment.message;
-
     commentElement.appendChild(img);
     commentElement.appendChild(text);
     return commentElement;
   };
 
-  // Функція для відображення повнорозмірного зображення
+  const renderComments = (comments) => {
+    commentsContainer.innerHTML = '';
+    comments.forEach((comment) => commentsContainer.appendChild(createCommentElement(comment)));
+  };
+
   const openFullView = (photo) => {
     bigPictureElement.classList.remove('hidden');
     bodyElement.classList.add('modal-open');
@@ -244,39 +241,23 @@ const fullViewModule = (() => {
     likesCountElement.textContent = photo.likes;
     commentsCountElement.textContent = photo.comments.length;
     captionElement.textContent = photo.description;
-
-    // Очищуємо старі коментарі
-    commentsContainer.innerHTML = '';
-    const fragment = document.createDocumentFragment();
-    photo.comments.forEach(comment => {
-      fragment.appendChild(createCommentElement(comment));
-    });
-    commentsContainer.appendChild(fragment);
-
-    // Закриття по Esc
-    document.addEventListener('keydown', onEscPress);
+    renderComments(photo.comments);
   };
 
-  // Функція для закриття повнорозмірного зображення
   const closeFullView = () => {
     bigPictureElement.classList.add('hidden');
     bodyElement.classList.remove('modal-open');
-    document.removeEventListener('keydown', onEscPress); // При закритті видаляємо обробник
   };
 
-  // Закриття по Esc
-  const onEscPress = (evt) => {
-    if (evt.key === 'Escape' || evt.key === 'Esc') {
+  closeButton.addEventListener('click', closeFullView);
+  document.addEventListener('keydown', (evt) => {
+    if (evt.key === 'Escape') {
       closeFullView();
     }
-  };
-
-  // Закриття при натисканні на кнопку закриття
-  closeButton.addEventListener('click', () => {
-    closeFullView();
   });
 
   return {
     openFullView,
   };
 })();
+
