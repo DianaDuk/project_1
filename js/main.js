@@ -92,9 +92,98 @@ const addThumbnailClickListener = (photos) => {
   });
 };
 
+// Генерація фотографій
 const photos = generatePhotos();
 thumbnailModule.renderThumbnails(photos);
 addThumbnailClickListener(photos);
+
+// Додати блок фільтрів
+const imgFilters = document.querySelector('.img-filters');
+imgFilters.classList.remove('img-filters--inactive');
+
+// Отримання елементів фільтрів
+const filterButtons = document.querySelectorAll('.img-filters__button');
+
+// Функція для очищення зображень
+const clearThumbnails = () => {
+  const picturesContainer = document.querySelector('.pictures');
+  picturesContainer.innerHTML = '';
+};
+
+// Функція для відображення усіх фотографій
+const showAllPhotos = (photos) => {
+  clearThumbnails();
+  thumbnailModule.renderThumbnails(photos);
+  addThumbnailClickListener(photos);
+};
+
+// Функція для показу випадкових фотографій
+const showRandomPhotos = (photos) => {
+  clearThumbnails();
+  const randomPhotos = [];
+  const usedIndices = new Set();
+  while (randomPhotos.length < 10) {
+    const randomIndex = getRandomNumber(0, photos.length - 1);
+    if (!usedIndices.has(randomIndex)) {
+      usedIndices.add(randomIndex);
+      randomPhotos.push(photos[randomIndex]);
+    }
+  }
+  thumbnailModule.renderThumbnails(randomPhotos);
+  addThumbnailClickListener(randomPhotos);
+};
+
+// Функція для показу обговорюваних фотографій
+const showDiscussedPhotos = (photos) => {
+  clearThumbnails();
+  const discussedPhotos = [...photos].sort((a, b) => b.comments.length - a.comments.length);
+  thumbnailModule.renderThumbnails(discussedPhotos);
+  addThumbnailClickListener(discussedPhotos);
+};
+
+// Обробка зміни фільтрів з усуненням брязкоту
+const debounce = (func, delay) => {
+  let timeoutId;
+  return function (...args) {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+    timeoutId = setTimeout(() => {
+      func.apply(this, args);
+    }, delay);
+  };
+};
+
+// Додавання обробників для фільтрів
+filterButtons.forEach((button) => {
+  button.addEventListener('click', debounce((evt) => {
+    const activeButton = imgFilters.querySelector('.img-filters__button--active');
+    
+    // Додана перевірка на наявність activeButton
+    if (activeButton) {
+      activeButton.classList.remove('img-filters__button--active');
+    }
+    
+    evt.currentTarget.classList.add('img-filters__button--active');
+    
+    switch (evt.currentTarget.id) {
+      case 'filter-random':
+        showRandomPhotos(photos);
+        break;
+      case 'filter-discussed':
+        showDiscussedPhotos(photos);
+        break;
+      default:
+        showAllPhotos(photos);
+        break;
+    }
+  }, 500));
+});
+
+
+// Відображення усіх фотографій за замовчуванням
+showAllPhotos(photos);
+
 
 // Завантаження зображення
 const uploadFileInput = document.querySelector('#upload-file');
